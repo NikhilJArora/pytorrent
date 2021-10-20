@@ -10,7 +10,13 @@ with open('README.rst') as readme_file:
 with open('HISTORY.rst') as history_file:
     history = history_file.read()
 
-requirements = ['Click>=7.0', ]
+requirements = [
+    'Click>=7.0', 
+    "requests",
+    "importlib",
+    "modern-bencode==1.5.0",
+    "bitstring==3.1.9",
+    ]
 
 test_requirements = ['pytest>=3', ]
 
@@ -28,22 +34,22 @@ setup(
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
     ],
-    description="Bittorrent client written written for learning purposes.",
+    description="Bittorrent client written for learning purposes.",
     entry_points={
         'console_scripts': [
-            'bittorrent_client=bittorrent_client.cli:main',
+            'pytorrent=pytorrent.cli:main',
         ],
     },
     install_requires=requirements,
     license="MIT license",
     long_description=readme + '\n\n' + history,
     include_package_data=True,
-    keywords='bittorrent_client',
-    name='bittorrent_client',
-    packages=find_packages(include=['bittorrent_client', 'bittorrent_client.*']),
+    keywords='pytorrent',
+    name='pytorrent',
+    packages=find_packages(include=['pytorrent', 'pytorrent.*']),
     test_suite='tests',
     tests_require=test_requirements,
-    url='https://github.com/nikhiljarora/bittorrent_client',
+    url='https://github.com/nikhiljarora/pytorrent',
     version='0.1.0',
     zip_safe=False,
 )

@@ -12,7 +12,7 @@ To install bittorrent client, run this command in your terminal:
 
 .. code-block:: console
 
-    $ pip install bittorrent_client
+    $ pip install pytorrent
 
 This is the preferred method to install bittorrent client, as it will always install the most recent stable release.
 
@@ -32,13 +32,13 @@ You can either clone the public repository:
 
 .. code-block:: console
 
-    $ git clone git://github.com/nikhiljarora/bittorrent_client
+    $ git clone git://github.com/nikhiljarora/pytorrent
 
 Or download the `tarball`_:
 
 .. code-block:: console
 
-    $ curl -OJL https://github.com/nikhiljarora/bittorrent_client/tarball/master
+    $ curl -OJL https://github.com/nikhiljarora/pytorrent/tarball/master
 
 Once you have a copy of the source, you can install it with:
 
@@ -47,5 +47,5 @@ Once you have a copy of the source, you can install it with:
     $ python setup.py install
 
 
-.. _Github repo: https://github.com/nikhiljarora/bittorrent_client
-.. _tarball: https://github.com/nikhiljarora/bittorrent_client/tarball/master
+.. _Github repo: https://github.com/nikhiljarora/pytorrent
+.. _tarball: https://github.com/nikhiljarora/pytorrent/tarball/master
