@@ -1,1 +1,1 @@
-"""Unit test package for bittorrent_client."""
+"""Unit test package for pytorrent."""
