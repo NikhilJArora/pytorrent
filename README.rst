@@ -1,6 +1,6 @@
-=================
-bittorrent client
-=================
+=========
+pytorrent
+=========
 
 
 .. image:: https://img.shields.io/pypi/v/pytorrent.svg
@@ -26,8 +26,10 @@ Bittorrent client written written for learning purposes.
 Features
 --------
 
-* supports only http trackers
-* supprot
+* support for http Trackers
+* support for download via .torrent files (no Magnet links)
+* support for stopping/resuming downloads
+* support for both single and multi-file torrents
 
 Credits
 -------
@@ -38,7 +40,7 @@ This package was created with Cookiecutter_ and the `audreyr/cookiecutter-pypack
 .. _`audreyr/cookiecutter-pypackage`: https://github.com/audreyr/cookiecutter-pypackage
 
 
-API Overview
-------------
+Get started
+-----------
 
 * 
