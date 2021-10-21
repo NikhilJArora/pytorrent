@@ -16,6 +16,7 @@ requirements = [
     "importlib",
     "modern-bencode==1.5.0",
     "bitstring==3.1.9",
+    "numpy==1.21.2",
     ]
 
 test_requirements = ['pytest>=3', ]

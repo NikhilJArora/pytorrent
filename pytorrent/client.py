@@ -1,7 +1,7 @@
 """PyTorrent client entry-point."""
 from os import name
 from pathlib import Path
-from typing import Union
+from typing import Optional, Union
 
 from twisted.internet import reactor, task
 
@@ -62,12 +62,20 @@ class PyTorrent:
 
         reactor.run()
 
+    def create_files(self, output_location: Optional[Union[str, Path]] = None):
+        """Takes downloaded pieces and creates files.
+
+        Creation of files expects that each piece is downloaded.
+        """
+        self.file_writer.write_files(output_location)
+
 
 if __name__ == "__main__":
     # TEMP: will refactor into proper CLI - ref to test data for now
     DATA_PATH = Path(__file__).parent.parent.resolve() / "tests" / "data"
-    # TORRENT_PATH = DATA_PATH / "debian-10.10.0-amd64-netinst.iso.torrent"
-    TORRENT_PATH = DATA_PATH / "Doom II_ Delta-Q-Delta.torrent"
+    TORRENT_PATH = DATA_PATH / "debian-10.10.0-amd64-netinst.iso.torrent"
+    # TORRENT_PATH = DATA_PATH / "Doom II_ Delta-Q-Delta.torrent"
 
     pt = PyTorrent(TORRENT_PATH)
     pt.start()
+    pt.create_files()
