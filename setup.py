@@ -38,7 +38,7 @@ setup(
     description="Bittorrent client written for learning purposes.",
     entry_points={
         'console_scripts': [
-            'pytorrent=pytorrent.cli:main',
+            'pytorrent=pytorrent.cli:run',
         ],
     },
     install_requires=requirements,
