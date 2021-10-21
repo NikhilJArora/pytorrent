@@ -8,6 +8,7 @@ from typing import Optional, Tuple
 
 import requests
 from bencode import decode
+from twisted.internet.error import ReactorNotRunning
 
 from .logger import get_logger
 from .msg_handler import MsgHandler
@@ -184,7 +185,8 @@ class Peer:
         self._piece = None  # will be set by calling `self._get_piece()`
         self.incomplete_msg: Optional[bytes] = None
         LOG.info(f"Current peer connecting to {self.host}, {self.port}")
-        reactor.connectTCP(self.host, self.port, protocal_factory(self))
+        self._reactor = reactor
+        self._reactor.connectTCP(self.host, self.port, protocal_factory(self))
         # connection made event - update state to CONNECTION_MADE and send handshake
 
     def _set_bitfield(self, bitfield: dict = None, have: dict = None) -> None:
@@ -449,6 +451,14 @@ class Peer:
         LOG.info(
             f"MISSING: {set(range(self._piece_manager._md.piece_count)) - self._writer.curr_pieces()}"
         )
+        if len(self._writer.curr_pieces()) / self._piece_manager._md.piece_count == 1:
+            LOG.info(f"PIECE DOWNLOAD FINISHED!")
+            try:
+                self._reactor.stop()
+            except ReactorNotRunning:
+                # exception thrown if reactor is already stopped
+                pass
+
         self.transport.loseConnection()
         if self._piece:
             LOG.info(f"loseConnection: returning {self._piece} to queue")

@@ -67,6 +67,7 @@ class PyTorrent:
 
         Creation of files expects that each piece is downloaded.
         """
+        LOG.info("Creating output files!")
         self.file_writer.write_files(output_location)
 
 
