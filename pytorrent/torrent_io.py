@@ -23,7 +23,7 @@ class PieceManager:
     def __init__(self, torrent_md: TorrentMD, writer) -> None:
         self._md = torrent_md
         self.writer = (
-            writer  # responsible for providing basic write methods `write_piece`
+            writer  # responsible for providing basic write methods i.e. `write_piece`
         )
         self._create_queue()
 
