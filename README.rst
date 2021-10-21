@@ -38,27 +38,22 @@ Get started
 Once installed, we can interact with `PyTorrent` using the following code snippet:
 
 .. code-block:: python
-        from pytorrent.client import PyTorrent
-        
-        torrent_file = "/path/to/file.torrent"
-        pt = PyTorrent(torrent_file)
-        
-        pt.start()  # starts the download of torrent pieces
-        
-        output_location = "/path/to/ouput/dir/"  # optional
-        pt.create_files(output_location)
+
+    from pytorrent.client import PyTorrent
+
+    torrent_file = "/path/to/file.torrent"
+    pt = PyTorrent(torrent_file)
+
+    pt.start()  # starts the download of torrent pieces
+
+    output_location = "/path/to/output/dir/"  # optional
+    pt.create_files(output_location)  # creates final file/files
 
 If prefered, we can also use the CLI instead:
 
-.. code-block:: shell
-        Usage: pytorrent [OPTIONS] TORRENT
+.. code-block:: bash
 
-        Console script for pytorrent.cli.run.
-
-        Options:
-        -o, --output-dir DIRECTORY
-        --help                      Show this message and exit.
-
+    $ pytorrent [-o, --output-dir DIRECTORY] "/path/to/file.torrent"
 
 Credits
 -------
