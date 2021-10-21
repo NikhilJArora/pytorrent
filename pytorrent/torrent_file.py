@@ -3,7 +3,9 @@
 import hashlib
 from math import ceil, floor
 from pathlib import Path
+from typing import Tuple
 
+import numpy as np
 from bencode import decode, decode_torrent, encode_torrent
 
 from .config import BLOCK_SIZE, PEER_ID, ROOT_DIR
@@ -53,7 +55,9 @@ class TorrentMD:
     def _parse_single_file(self):
         """Parsing single file torrent."""
         self.file_count = 1
+        self.file_name = self.torrent_dict["info"]["name"]
         self.torrent_length = int(self.torrent_dict["info"]["length"])
+        self.md5sum = self.torrent_dict["info"].get("md5sum")
         self.piece_count = (
             self.torrent_dict["info"]["length"]
             / self.torrent_dict["info"]["piece length"]
@@ -89,6 +93,21 @@ class TorrentMD:
         for file_dict in self.torrent_dict["info"]["files"]:
             self.torrent_length += int(file_dict["length"])
 
+        # where each file ends based on piece, byte count in file (prev is starting point)
+        # self.torrent_dict["info"]["files"]
+        files = self.torrent_dict["info"]["files"]
+        file_lens = [f["length"] for f in files]
+        self.file_lengths = file_lens
+        self.file_paths = [Path("/".join(p)) for p in [f["path"] for f in files]]
+        file_cumsum = np.cumsum(file_lens)
+        self.file_offsets: Tuple[int, int] = [
+            (floor(f / self.piece_length), f % self.piece_length) for f in file_cumsum
+        ]
+
+    @property
+    def piece_length(self):
+        return self.torrent_dict["info"]["piece length"]
+
     def _log_details(self):
         """Helper method that logs details of parsed file.
 
@@ -112,6 +131,7 @@ class TorrentMD:
         Extra details
         -------------
         file_count: {self.file_count}
+        md5sum: {self.md5sum}
         """
         )
 
