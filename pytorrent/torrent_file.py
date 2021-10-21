@@ -57,7 +57,6 @@ class TorrentMD:
         self.file_count = 1
         self.file_name = self.torrent_dict["info"]["name"]
         self.torrent_length = int(self.torrent_dict["info"]["length"])
-        self.md5sum = self.torrent_dict["info"].get("md5sum")
         self.piece_count = (
             self.torrent_dict["info"]["length"]
             / self.torrent_dict["info"]["piece length"]
@@ -93,8 +92,6 @@ class TorrentMD:
         for file_dict in self.torrent_dict["info"]["files"]:
             self.torrent_length += int(file_dict["length"])
 
-        # where each file ends based on piece, byte count in file (prev is starting point)
-        # self.torrent_dict["info"]["files"]
         files = self.torrent_dict["info"]["files"]
         file_lens = [f["length"] for f in files]
         self.file_lengths = file_lens
@@ -131,7 +128,6 @@ class TorrentMD:
         Extra details
         -------------
         file_count: {self.file_count}
-        md5sum: {self.md5sum}
         """
         )
 
