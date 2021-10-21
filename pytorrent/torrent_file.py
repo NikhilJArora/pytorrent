@@ -61,10 +61,8 @@ class TorrentMD:
             self.torrent_dict["info"]["length"]
             / self.torrent_dict["info"]["piece length"]
         )
-        assert (
-            int(self.piece_count) == self.piece_count
-        ), "Current assumption is that each piece is the same length."
-        self.piece_count = int(self.piece_count)
+
+        self.piece_count = ceil(self.piece_count)
         self.blocks = [
             (j, BLOCK_SIZE * i, BLOCK_SIZE)
             for j in range(self.piece_count)
