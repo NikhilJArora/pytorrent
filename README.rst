@@ -31,6 +31,30 @@ Features
 * support for stopping/resuming downloads
 * support for both single and multi-file torrents
 
+
+Get started
+-----------
+
+Once installed, we can interact with `PyTorrent` using the following code snippet:
+
+.. code-block:: python
+
+    from pytorrent.client import PyTorrent
+
+    torrent_file = "/path/to/file.torrent"
+    pt = PyTorrent(torrent_file)
+
+    pt.start()  # starts the download of torrent pieces
+
+    output_location = "/path/to/output/dir/"  # optional
+    pt.create_files(output_location)  # creates final file/files
+
+If prefered, we can also use the CLI instead:
+
+.. code-block:: bash
+
+    $ pytorrent [-o, --output-dir DIRECTORY] "/path/to/file.torrent"
+
 Credits
 -------
 
@@ -38,9 +62,3 @@ This package was created with Cookiecutter_ and the `audreyr/cookiecutter-pypack
 
 .. _Cookiecutter: https://github.com/audreyr/cookiecutter
 .. _`audreyr/cookiecutter-pypackage`: https://github.com/audreyr/cookiecutter-pypackage
-
-
-Get started
------------
-
-* 
