@@ -3,9 +3,6 @@ pytorrent
 =========
 
 
-.. image:: https://img.shields.io/pypi/v/pytorrent.svg
-        :target: https://pypi.python.org/pypi/pytorrent
-
 .. image:: https://img.shields.io/travis/nikhiljarora/pytorrent.svg
         :target: https://travis-ci.com/nikhiljarora/pytorrent
 
@@ -16,7 +13,7 @@ pytorrent
 
 
 
-Bittorrent client written written for learning purposes.
+Simple Bittorrent client written using Python and `Twisted <https://pypi.org/project/Twisted/>`_.
 
 
 * Free software: MIT license
@@ -27,7 +24,7 @@ Features
 --------
 
 * support for http Trackers
-* support for download via .torrent files (no Magnet links)
+* support for download via ``.torrent`` files (no Magnet links)
 * support for stopping/resuming downloads
 * support for both single and multi-file torrents
 
