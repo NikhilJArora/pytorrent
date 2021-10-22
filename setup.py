@@ -12,8 +12,9 @@ with open('HISTORY.rst') as history_file:
 
 requirements = [
     'Click>=7.0', 
-    "requests",
+    "requests==2.26.0",
     "importlib",
+    "twisted==21.7.0",
     "modern-bencode==1.5.0",
     "bitstring==3.1.9",
     "numpy==1.21.2",
