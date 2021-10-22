@@ -46,7 +46,7 @@ class PyTorrent:
             self.torrent_md.torrent_length,
         )
         self.peer_ip_ports = tracker.get_peers()
-        LOG.info(self.peer_ip_ports)
+        LOG.info(f"Tracker returned potential peers: {self.peer_ip_ports}")
 
         peers = []
         for i in range(len(self.peer_ip_ports)):

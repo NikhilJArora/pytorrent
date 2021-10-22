@@ -97,7 +97,7 @@ class MsgHandler:
             raise AttributeError("Must set prior to validating payload length")
 
         if len(self.raw_data) < self.length_prefix + 4:
-            LOG.warning(
+            LOG.debug(
                 f"Incomplete msg payload, waiting for entire msg prior to parsing: {len(self.raw_data) - 4} when expected {self.length_prefix}"
             )
             self.is_incomplete = True
@@ -169,16 +169,19 @@ class MsgHandler:
             return eval(self.msg_packers[name])(*args, **kwargs)
 
 
+import struct
+
+
 # msg payload helper functions
 def msg_interested_pack():
-    import struct
-
     return struct.pack(">L", 1) + bytes([2])
 
 
-def msg_keep_alive_pack():
-    import struct
+def msg_not_interested_pack():
+    return struct.pack(">L", 1) + bytes([3])
 
+
+def msg_keep_alive_pack():
     return struct.pack(">L", 0)
 
 
@@ -206,8 +209,6 @@ def msg_request_unpack(data):
     0, 32768, 16384
 
     """
-    import struct
-
     assert len(data) == 12
     return {
         "index": struct.unpack(">L", data[0:4]),
@@ -221,8 +222,6 @@ def msg_request_pack(index, begin, length):
     b'\x00\x00\x00\r\x06\x00\x00\x00\x00\x00\x00\x80\x00\x00\x00@\x00'
     0, 32768, 16384 (5 byte prefix_len + msg_id prepended - not sure if it should be handled here)
     """
-    import struct
-
     return (
         bytes([0, 0, 0, 13, 6])
         + struct.pack(">L", index)
@@ -245,8 +244,6 @@ def msg_piece_unpack(data):
 
     Note: block is subset of piece.
     """
-    import struct
-
     return {
         "index": struct.unpack(">L", data[0:4])[0],
         "begin": struct.unpack(">L", data[4:8])[0],
@@ -261,6 +258,4 @@ def msg_cancel_pack():
 
 def msg_port_unpack(data):
     """out of scope for now, need to read about this later!"""
-    import struct
-
     return {"listen-port": struct.unpack(">H", data)[0]}

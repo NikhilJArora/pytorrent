@@ -58,7 +58,6 @@ class Tracker:
         self.torrent_length = torrent_length
 
         self._set_url_params()
-
         self.interval = None
         self.last_req = None
 
@@ -96,17 +95,15 @@ class Tracker:
                     f" ({time_passed} < {self.interval})"
                 )
                 return self.latest_peers
-
-        resp = requests.get(
-            url=self.announce_url,
-            params=self.url_params,
-        )
+        LOG.info(f"Connecting to the following tracker: {self.announce_url}")
+        resp = requests.get(url=self.announce_url, params=self.url_params)
         resp.raise_for_status()
         resp_dict = decode(resp.content)
         self.interval = resp_dict[b"interval"]
         self.last_req = time.time()
         self.latest_peers = _format_peers(resp_dict[b"peers"])
-        return self.latest_peers
+
+        return list(set(self.latest_peers))
 
     def get_handshake():
         """Generate handshake payload"""
@@ -184,10 +181,10 @@ class Peer:
         self._bitfield = None
         self._piece = None  # will be set by calling `self._get_piece()`
         self.incomplete_msg: Optional[bytes] = None
-        LOG.info(f"Current peer connecting to {self.host}, {self.port}")
         self._reactor = reactor
         self._reactor.connectTCP(self.host, self.port, protocal_factory(self))
-        # connection made event - update state to CONNECTION_MADE and send handshake
+
+        self._loseConnectionCalled = False
 
     def _set_bitfield(self, bitfield: dict = None, have: dict = None) -> None:
         """Set `self._bitfield` based on either bitfield or have msg.
@@ -227,6 +224,21 @@ class Peer:
             self._piece = piece
         return self._piece
 
+    def _get_progress(self) -> str:
+        """Get current progress for logging purposes."""
+        return (
+            str(
+                round(
+                    100
+                    * len(self._writer.curr_pieces())
+                    / self._piece_manager._md.piece_count,
+                    2,
+                )
+            )
+            + " %"
+        )
+        pass
+
     def send_handshake(self):
         """Called on successful connection ``Protocol.connectionMade``.
 
@@ -262,11 +274,11 @@ class Peer:
             return True
         else:
             if self._handshake_dict["info_hash"] not in data:
-                LOG.error(
+                LOG.debug(
                     f"{self.host}, {self.port}: Missing corrent info_hash {self._handshake_dict['info_hash']}"
                 )
             if len(data) != len(self._handshake_payload):
-                LOG.error(
+                LOG.debug(
                     f"{self.host}, {self.port}: Data passed incorrect length {len(data)} != {len(self._handshake_payload)}"
                 )
             return False
@@ -295,7 +307,7 @@ class Peer:
         LOG.debug(f"{self.host}, {self.port}: {data[0:10]}, len: {len(data)}")
         # handshake handling block
         if self._state == self.PeerState.HANDSHAKE_PENDING:
-            LOG.info(
+            LOG.debug(
                 f"{self.host}, {self.port}: Current vs expected handshake payload {len(data)} vs {len(self._handshake_payload)}"
             )
             if len(data) > len(self._handshake_payload):
@@ -303,14 +315,15 @@ class Peer:
                     data[: len(self._handshake_payload)],
                     data[len(self._handshake_payload) :],
                 )
-                LOG.info(
+                LOG.debug(
                     f"{self.host}, {self.port}: {handshake_data}, {next_msg_raw_data}"
                 )
             else:
                 handshake_data, next_msg_raw_data = data, None
             handshake_valid = self.validate_handshake(handshake_data)
             if handshake_valid:
-                LOG.info(
+                LOG.info(f"{self.host}: Peer sent valid handshake!")
+                LOG.debug(
                     f"{self.host}, {self.port}: Peer sent valid handshake, updating state from {self._state} to {self.PeerState.BITFIELD_PARSING}."
                 )
                 self._state = self.PeerState.BITFIELD_PARSING
@@ -318,7 +331,7 @@ class Peer:
                     self.dataReceived(next_msg_raw_data)
             else:
                 LOG.info(
-                    f"{self.host}, {self.port}: Peer sent invalid handshake, closing connection."
+                    f"{self.host}: Peer sent invalid handshake, closing connection!"
                 )
                 self.loseConnection(f"{self.host}, {self.port}: handshake invalid")
 
@@ -331,7 +344,7 @@ class Peer:
                 return
             resp = self.evaluate_msg(msg)
             if resp:
-                LOG.info(
+                LOG.debug(
                     f"{self.host}, {self.port}: Writing the following payload {resp}"
                 )
                 self.transport.write(resp)
@@ -355,17 +368,18 @@ class Peer:
         bytes
             packed msg payload based on msg and state
         """
-        LOG.info(
+        LOG.debug(
             f"{self.host}, {self.port}: Following msg recieved '{msg.msg_name}', state: {self._state}"
         )
         if msg.msg_name == "keep-alive" or msg.msg_name is None:
-            LOG.info("Peer sent keep-alive.")
+            LOG.debug("Peer sent keep-alive.")
             return msg.pack_msg("keep-alive")
 
         if self._state == self.PeerState.BITFIELD_PARSING:
             if msg.msg_name == "bitfield":
                 self._set_bitfield(bitfield=msg.msg_payload_parsed)
-                LOG.info(
+                LOG.info(f"{self.host}: Peer sent their bitfield.")
+                LOG.debug(
                     f"{self.host}, {self.port}: parsed bitfield which is now set to: ({len(self._bitfield)})"
                 )
                 self._peer_state["am_interested"] = True
@@ -374,7 +388,7 @@ class Peer:
                 return msg.pack_msg("interested")
             elif msg.msg_name == "have":
                 self._set_bitfield(have=msg.msg_payload_parsed)
-                LOG.info(f"{self.host}, {self.port}: parsed have msg.")
+                LOG.debug(f"{self.host}, {self.port}: parsed have msg.")
             elif msg.msg_name == "choke":
                 # telling me that its time to review bitfield and decide if Im going to need anything
                 if self._get_piece():
@@ -382,7 +396,9 @@ class Peer:
                     self._peer_state["am_choking"] = True
                     return msg.pack_msg("interested")
                 else:
-                    LOG.info("Unable to find any needed pieces from peer")
+                    LOG.info(
+                        f"{self.host}: Peer has no pieces we need, letting them know 'not interested'."
+                    )
                     return msg.pack_msg("not interested")
             elif msg.msg_name == "unchoke":
                 self._peer_state["am_choking"] = False
@@ -396,19 +412,21 @@ class Peer:
                 )
 
         elif self._state == self.PeerState.REQUEST_PASSING:
-            LOG.info(f"{self.host}, {self.port}: {self._peer_state}")
+            LOG.debug(f"{self.host}, {self.port}: {self._peer_state}")
             if msg.msg_name == "piece":
+                if not self._piece:
+                    return msg.pack_msg("not interested")
                 finished = self._piece.write_block(**msg.msg_payload_parsed)
                 if finished:
                     LOG.info(
-                        f"{self.host}, {self.port}: Finished downloading piece {self._piece.index}, getting new piece."
+                        f"({self._get_progress()}) {self.host}: Downloaded piece {self._piece.index}, getting new piece."
                     )
                     self._piece = None
                     if self._get_piece():
                         return msg.pack_msg("request_all", self._piece)
                     else:
                         self.loseConnection(
-                            f"{self.host}, {self.port}: Closing peer connection since there are no more needed pieces."
+                            f"({self._get_progress()}) {self.host}: Closing peer connection since there are no more needed pieces."
                         )
                 else:
                     return msg.pack_msg("keep-alive")
@@ -418,24 +436,28 @@ class Peer:
                     self._peer_state["am_interested"]
                     and not self._peer_state["am_choking"]
                 ):
-                    LOG.info("{self.host}, {self.port}: Sending request for all blocks")
+                    LOG.info(
+                        f"({self._get_progress()}) {self.host}: Sending request for piece."
+                    )
                     if self._get_piece():
                         return msg.pack_msg("request_all", self._piece)
                     else:
                         self.loseConnection(
-                            f"{self.host}, {self.port}: Closing peer connection since there are no more needed pieces."
+                            f"({self._get_progress()}) {self.host}: Closing peer connection since there are no more needed pieces."
                         )
             elif msg.msg_name == "choke":
                 self._peer_state["am_choking"] = True
-                LOG.info("Peer choked, waiting for unchoke to resume requests.")
+                LOG.info(
+                    f"({self._get_progress()}) {self.host}: Peer choked, waiting for 'unchoke' to resume requests."
+                )
                 return None
             else:
                 self.loseConnection(
-                    f"msg type of {msg.msg_name} unexpected during: {self._state}"
+                    f"({self._get_progress()}) {self.host}, {self.port}: msg type of {msg.msg_name} unexpected during: {self._state}"
                 )
         else:
             self.loseConnection(
-                f"Unexpected case: msg type of {msg.msg_name} during: {self._state}"
+                f"({self._get_progress()}) {self.host}, {self.port}: Unexpected msg type of {msg.msg_name} during: {self._state}"
             )
 
     def loseConnection(self, reason):
@@ -444,15 +466,17 @@ class Peer:
         Cleans up Peer connection by returning piece and making
         call to cleanly end TCP connection.
         """
-        LOG.info(f"calling loseConnection for {self.host} due to: {reason}")
-        LOG.info(
-            f"PROGESS: {len(self._writer.curr_pieces())}/{self._piece_manager._md.piece_count}"
+        LOG.debug(
+            f"{self._get_progress()}) {self.host}:Called loseConnection. Reason: {reason}"
         )
-        LOG.info(
-            f"MISSING: {set(range(self._piece_manager._md.piece_count)) - self._writer.curr_pieces()}"
+        if not self._loseConnectionCalled:
+            self._loseConnectionCalled = True
+            LOG.info(f"({self._get_progress()}) {self.host}: Closing connection.")
+        LOG.debug(
+            f"Current still need: {set(range(self._piece_manager._md.piece_count)) - self._writer.curr_pieces()}"
         )
         if len(self._writer.curr_pieces()) / self._piece_manager._md.piece_count == 1:
-            LOG.info(f"PIECE DOWNLOAD FINISHED!")
+            LOG.info(f"({self._get_progress()}) DOWNLOAD FINISHED!")
             try:
                 self._reactor.stop()
             except ReactorNotRunning:
