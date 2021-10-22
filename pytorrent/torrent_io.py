@@ -32,7 +32,7 @@ class PieceManager:
 
         Only builds queue with pieces that are not currently downloaded.
         """
-        LOG.info(self._md.piece_count)
+        LOG.debug(f"Total piece count: {self._md.piece_count}")
         self._q = deque([], maxlen=self._md.piece_count)
 
         curr_pieces = self.writer.curr_pieces()
@@ -137,15 +137,16 @@ class Piece:
             state of piece download, True means done!
         """
         if index != self.index:
-            raise ValueError(
-                f"Block sent with incorrect index. expected {self.index} but got {index}"
-            )
+            return False
+            # raise ValueError(
+            #     f"Block sent with incorrect index. expected {self.index} but got {index}"
+            # )
 
         if begin % BLOCK_SIZE != 0:
             raise ValueError(
                 f"Block begin spot should return 0: begin % BLOCK_SIZE {begin % BLOCK_SIZE}"
             )
-        LOG.info(f"Writing {index}, {begin} to block index: {begin/BLOCK_SIZE}")
+        LOG.debug(f"Writing {index}, {begin} to block index: {begin/BLOCK_SIZE}")
         self._block_data[int(begin / BLOCK_SIZE)] = block
         self.blocks_recieved += 1
         if self.blocks_recieved == len(self.blocks):
@@ -238,7 +239,7 @@ class FileWriter:
         curr_pieces = self.curr_pieces()
         if len(curr_pieces) != self._md.piece_count:
             raise IndexError(
-                f"Unable to create file/files since missing {self.self._md.piece_count - len(curr_pieces)} pieces."
+                f"Unable to create file/files since missing {self._md.piece_count - len(curr_pieces)} pieces."
             )
 
         if output_location is None:
@@ -283,13 +284,14 @@ class FileWriter:
                 raise RuntimeError("Expected file would be deleted.")
             abs_file_path.parent.mkdir(parents=True, exist_ok=True)
             abs_file_path.touch()
-            LOG.info(
+            LOG.info(f"Creating {abs_file_path}")
+            LOG.debug(
                 f"Working on {abs_file_path}, \nexpected size: {self._md.file_lengths[i]}"
                 f"\n{(h_pce_ind, h_byte_ind)} to {(t_pce_ind, t_byte_ind)}"
             )
             if h_pce_ind == t_pce_ind:
                 # parsing from within single piece
-                LOG.info(f"Parsing from within single piece")
+                LOG.debug(f"Parsing from within single piece")
                 LOG.debug(
                     f"Working on {abs_file_path}, expected size: {self._md.file_lengths[i]}"
                 )
