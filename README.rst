@@ -70,6 +70,7 @@ If prefered, we can interact directly with the main `PyTorrent` class to achieve
     pt.create_files(output_location)  # creates final file/files
 
 There are also some other classes work noting that expose other useful functionality:
+
 * to interact directly with the Torrent metadata class: ``pytorrent.torrent_file.TorrentMD``
 * to interact directly with the Torrent Tracker class: ``pytorrent.connections.Tracker``
 
