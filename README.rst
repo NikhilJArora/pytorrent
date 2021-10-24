@@ -31,8 +31,31 @@ Features
 
 Get started
 -----------
+First lets get our python package installed. I prefer to user conda to create my virtual environments but any should work.
 
-Once installed, we can interact with `PyTorrent` using the following code snippet:
+With `conda <https://docs.conda.io/en/latest/miniconda.html>`_ installed lets create a virtual environment (venv or virtualenv would also work):
+
+.. code-block:: bash
+
+    conda create -n pytorrent python=3.8 -y
+    conda activate pytorrent
+    
+Now with our venv activated lets clone down the repo and install it:
+
+.. code-block:: bash
+
+    git clone https://github.com/NikhilJArora/pytorrent.git
+    cd pytorrent
+    pip install -e .
+
+
+Once installed, we interact with the ``pytorrent`` CLI as follows:
+
+.. code-block:: bash
+
+    $ pytorrent [-o, --output-dir DIRECTORY] "/path/to/file.torrent"
+
+If prefered, we can interact directly with the main `PyTorrent` class to achieve the same result with the Python REPL:
 
 .. code-block:: python
 
@@ -46,11 +69,10 @@ Once installed, we can interact with `PyTorrent` using the following code snippe
     output_location = "/path/to/output/dir/"  # optional
     pt.create_files(output_location)  # creates final file/files
 
-If prefered, we can also use the CLI instead:
+There are also some other classes work noting that expose other useful functionality:
+* to interact directly with the Torrent metadata class: ``pytorrent.torrent_file.TorrentMD``
+* to interact directly with the Torrent Tracker class: ``pytorrent.connections.Tracker``
 
-.. code-block:: bash
-
-    $ pytorrent [-o, --output-dir DIRECTORY] "/path/to/file.torrent"
 
 Credits
 -------
